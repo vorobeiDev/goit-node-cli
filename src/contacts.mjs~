@@ -1,0 +1,55 @@
+const fs = require("fs").promise;
+const path = require('node:path');
+
+const contactsPath = path.resolve("src", "db", "contacts.json");
+
+export const readFile = async () => {
+  try {
+    const data = await fs.readFile(contactsPath);
+    return JSON.parse(data);
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+
+export const writeFile = async (data) => {
+  try {
+    return await fs.writeFile(contactsPath, JSON.stringify(data));
+  } catch (error) {
+    console.log(error.message);
+  }
+}
+
+export const listContacts = async () => {
+  return await readFile() || [];
+}
+
+export const getContactById = async (contactId) => {
+  const file = await readFile()
+  return file.find(contact => contact.id === contactId) || null;
+}
+
+export const removeContact = async (contactId) => {
+  const file = await readFile();
+  let deletedContact = null;
+
+  const contacts = file.filter((contact) => {
+    if (contact.id === contactId) {
+      deletedContact = contact
+    }
+    return contact.id !== contactId
+  });
+
+  await writeFile(contacts);
+
+  return deletedContact;
+}
+
+export const addContact = async (name, email, phone) => {
+  const file = await readFile()
+
+  const newContact = { id: Date.now().toString(), name, email, phone };
+  await writeFile([...file, newContact]);
+
+  return newContact;
+}
